@@ -1,0 +1,59 @@
+Sub CreateWorksheetsByUniqueItems()
+    Dim ws As Worksheet
+    Dim uniqueValues As Collection
+    Dim cell As Range
+    Dim sourceRange As Range
+    Dim lastRow As Long
+    Dim newSheet As Worksheet
+    Dim valueExists As Boolean
+
+    ' Set the active worksheet
+    Set ws = ActiveSheet
+
+    ' Ensure the active worksheet name is "ohcguidereport"
+    If ws.Name <> "ohcguidereport" Then
+        MsgBox "This code can only be run on the worksheet named 'ohcguidereport'.", vbExclamation
+        Exit Sub
+    End If
+
+    ' Find the last row in column F
+    lastRow = ws.Cells(ws.Rows.Count, "F").End(xlUp).Row
+
+    ' Set the range containing the data (excluding the header)
+    Set sourceRange = ws.Range("F2:F" & lastRow)
+
+    ' Initialize a collection to hold unique values
+    Set uniqueValues = New Collection
+
+    ' Loop through the range and collect unique values
+    On Error Resume Next
+    For Each cell In sourceRange
+        If cell.Value <> "" Then
+            uniqueValues.Add cell.Value, CStr(cell.Value)
+        End If
+    Next cell
+    On Error GoTo 0
+
+    ' Loop through the unique values and create new worksheets
+    Application.ScreenUpdating = False
+    For Each Item In uniqueValues
+        valueExists = False
+
+        ' Check if a worksheet with the name already exists
+        For Each newSheet In ThisWorkbook.Sheets
+            If newSheet.Name = CStr(Item) Then
+                valueExists = True
+                Exit For
+            End If
+        Next newSheet
+
+        ' Create a new worksheet if it does not already exist
+        If Not valueExists Then
+            Set newSheet = ThisWorkbook.Sheets.Add(After:=ThisWorkbook.Sheets(ThisWorkbook.Sheets.Count))
+            newSheet.Name = CStr(Item)
+        End If
+    Next Item
+    Application.ScreenUpdating = True
+
+    MsgBox "Worksheets created successfully!", vbInformation
+End Sub
